@@ -1,27 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { processTransfers, ProcessedData, ProcessedTransfer, FPLChip } from '@/lib/fpl';
 import { TransferCard } from '@/components/TransferCard';
-import { Loader2, Search, AlertCircle, Zap } from 'lucide-react';
+import { Loader2, Search, AlertCircle, Zap, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import Link from 'next/link';
 
-export function Dashboard() {
-  const [teamId, setTeamId] = useState('');
+export function Dashboard({ initialTeamId }: { initialTeamId?: string }) {
+  const [teamId, setTeamId] = useState(initialTeamId || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState<ProcessedData | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!teamId.trim()) return;
-
+  const fetchData = useCallback(async (id: string) => {
+    if (!id.trim()) return;
     setLoading(true);
     setError('');
     setData(null);
-
     try {
-      const result = await processTransfers(parseInt(teamId, 10));
+      const result = await processTransfers(parseInt(id, 10));
       setData(result);
     } catch (err) {
       setError('Failed to fetch transfers. Please check your Team ID and try again.');
@@ -29,6 +27,15 @@ export function Dashboard() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (initialTeamId) fetchData(initialTeamId);
+  }, [initialTeamId, fetchData]);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchData(teamId);
   };
 
   const transfers = data?.transfers || [];
@@ -89,14 +96,23 @@ export function Dashboard() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+      {initialTeamId && (
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-6">
+          <ArrowLeft className="w-4 h-4" />
+          Back to home
+        </Link>
+      )}
+
       <div className="text-center mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">
           FPL Transfer Rater
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Enter your Fantasy Premier League Team ID to analyze your transfers.
-          We compare the 3-week average of your new player against the trailing 3-week average of the player you transferred out.
-        </p>
+        {!initialTeamId && (
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Enter your Fantasy Premier League Team ID to analyze your transfers.
+            We compare the 3-week average of your new player against the trailing 3-week average of the player you transferred out.
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSearch} className="max-w-md mx-auto mb-12">

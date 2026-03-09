@@ -35,6 +35,30 @@ export interface ProcessedData {
   chips: FPLChip[];
 }
 
+export interface LeagueMember {
+  entry: number;
+  playerName: string;
+  entryName: string;
+  rank: number;
+  lastRank: number;
+  eventTotal: number;
+  total: number;
+  goodMoves?: number;
+  pointChasing?: number;
+  neutral?: number;
+  tooSoon?: number;
+  transferCount?: number;
+  loaded?: boolean;
+  error?: boolean;
+}
+
+export interface LeagueData {
+  name: string;
+  members: LeagueMember[];
+  hasNext: boolean;
+  page: number;
+}
+
 export async function fetchFPL(path: string) {
   const res = await fetch(`/api/fpl?path=${encodeURIComponent(path)}`);
   if (!res.ok) throw new Error('Failed to fetch data');
@@ -57,15 +81,35 @@ export async function getPlayerSummary(playerId: number) {
   return fetchFPL(`element-summary/${playerId}/`);
 }
 
-export async function processTransfers(teamId: number): Promise<ProcessedData> {
-  const [bootstrap, transfers, history] = await Promise.all([
-    getBootstrap(),
+export async function getLeagueStandings(leagueId: number, page = 1): Promise<LeagueData> {
+  const data = await fetchFPL(`leagues-classic/${leagueId}/standings/?page_standings=${page}`);
+  return {
+    name: data.league.name,
+    members: data.standings.results.map((r: any) => ({
+      entry: r.entry,
+      playerName: r.player_name,
+      entryName: r.entry_name,
+      rank: r.rank,
+      lastRank: r.last_rank,
+      eventTotal: r.event_total,
+      total: r.total,
+    })),
+    hasNext: data.standings.has_next,
+    page,
+  };
+}
+
+export async function processTransfersWithBootstrap(
+  teamId: number,
+  bootstrap: any
+): Promise<ProcessedData> {
+  const [transfers, history] = await Promise.all([
     getTransfers(teamId),
     getHistory(teamId)
   ]);
-  
+
   const currentEvent = bootstrap.events.find((e: any) => e.is_current)?.id || 1;
-  
+
   const players: Record<number, FPLPlayer> = {};
   bootstrap.elements.forEach((p: any) => {
     players[p.id] = p;
@@ -133,4 +177,9 @@ export async function processTransfers(teamId: number): Promise<ProcessedData> {
     transfers: processed.sort((a, b) => b.event - a.event),
     chips: history.chips || []
   };
+}
+
+export async function processTransfers(teamId: number): Promise<ProcessedData> {
+  const bootstrap = await getBootstrap();
+  return processTransfersWithBootstrap(teamId, bootstrap);
 }
