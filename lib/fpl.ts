@@ -33,6 +33,7 @@ export interface FPLChip {
 export interface ProcessedData {
   transfers: ProcessedTransfer[];
   chips: FPLChip[];
+  currentEvent: number;
 }
 
 export interface LeagueMember {
@@ -175,7 +176,8 @@ export async function processTransfersWithBootstrap(
 
   return {
     transfers: processed.sort((a, b) => b.event - a.event),
-    chips: history.chips || []
+    chips: history.chips || [],
+    currentEvent,
   };
 }
 

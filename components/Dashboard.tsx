@@ -7,11 +7,12 @@ import { Loader2, Search, AlertCircle, Zap, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
-export function Dashboard({ initialTeamId }: { initialTeamId?: string }) {
+export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: string; initialLeagueId?: string }) {
   const [teamId, setTeamId] = useState(initialTeamId || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState<ProcessedData | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchData = useCallback(async (id: string) => {
     if (!id.trim()) return;
@@ -21,6 +22,7 @@ export function Dashboard({ initialTeamId }: { initialTeamId?: string }) {
     try {
       const result = await processTransfers(parseInt(id, 10));
       setData(result);
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to fetch transfers. Please check your Team ID and try again.');
       console.error(err);
@@ -94,12 +96,19 @@ export function Dashboard({ initialTeamId }: { initialTeamId?: string }) {
     }
   };
 
+  const statusText = data
+    ? `Current GW: ${data.currentEvent} | Last updated: ${lastUpdated ? lastUpdated.toLocaleString() : '-'}`
+    : null;
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
       {initialTeamId && (
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-6">
+        <Link
+          href={initialLeagueId ? `/league/${initialLeagueId}` : '/'}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-6"
+        >
           <ArrowLeft className="w-4 h-4" />
-          Back to home
+          {initialLeagueId ? 'Back to league' : 'Back to home'}
         </Link>
       )}
 
@@ -112,6 +121,9 @@ export function Dashboard({ initialTeamId }: { initialTeamId?: string }) {
             Enter your Fantasy Premier League Team ID to analyze your transfers.
             We compare the 3-week average of your new player against the trailing 3-week average of the player you transferred out.
           </p>
+        )}
+        {statusText && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">{statusText}</p>
         )}
       </div>
 

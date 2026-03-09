@@ -46,13 +46,13 @@ export default function Home() {
             transition={{ delay: 0.1 }}
             className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/[0.08] shadow-sm p-6"
           >
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 min-h-[5.5rem]">
               <div className="p-2.5 bg-indigo-50 dark:bg-indigo-500/20 rounded-xl">
                 <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Team Lookup</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Analyze one team&apos;s transfers</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Analyze transfer decisions for one team</p>
               </div>
             </div>
 
@@ -86,13 +86,13 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/[0.08] shadow-sm p-6"
           >
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 min-h-[5.5rem]">
               <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/20 rounded-xl">
                 <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">League Lookup</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Compare transfers across a league</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Compare transfer decisions across mini-league rivals</p>
               </div>
             </div>
 

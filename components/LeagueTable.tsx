@@ -13,6 +13,8 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
   const [transfersLoading, setTransfersLoading] = useState(false);
   const [transfersLoaded, setTransfersLoaded] = useState(0);
   const [error, setError] = useState('');
+  const [currentEvent, setCurrentEvent] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const loadStandings = useCallback(async () => {
     setLoading(true);
@@ -21,6 +23,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
       const data = await getLeagueStandings(parseInt(leagueId, 10));
       setLeagueName(data.name);
       setMembers(data.members);
+      setLastUpdated(new Date());
     } catch {
       setError('Failed to fetch league standings. Please check the League ID and try again.');
     } finally {
@@ -32,6 +35,8 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
     setTransfersLoading(true);
     try {
       const bootstrap = await getBootstrap();
+      const current = bootstrap.events.find((e: any) => e.is_current)?.id ?? null;
+      setCurrentEvent(current);
       const BATCH_SIZE = 3;
       for (let i = 0; i < entries.length; i += BATCH_SIZE) {
         const batch = entries.slice(i, i + BATCH_SIZE);
@@ -61,6 +66,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
         }));
         setTransfersLoaded(prev => prev + batch.length);
       }
+      setLastUpdated(new Date());
     } catch {
       // bootstrap fetch failed — mark all as error
       setMembers(prev => prev.map(m => ({ ...m, loaded: true, error: true })));
@@ -128,6 +134,11 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
             {leagueName}
           </h1>
+          {(currentEvent || lastUpdated) && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Current GW: {currentEvent ?? '-'} | Last updated: {lastUpdated ? lastUpdated.toLocaleString() : '-'}
+            </p>
+          )}
           {transfersLoading && (
             <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -172,7 +183,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                     </td>
                     <td className="px-4 py-3 border-b border-gray-100 dark:border-white/[0.04]">
                       <Link
-                        href={`/team/${member.entry}`}
+                        href={`/team/${member.entry}?leagueId=${leagueId}`}
                         className="group block"
                       >
                         <div className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
