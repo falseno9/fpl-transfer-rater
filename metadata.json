@@ -1,0 +1,5 @@
+{
+  "name": "FPL Transfer Rater",
+  "description": "Analyze your Fantasy Premier League transfers to see if you made good moves or were just point chasing.",
+  "requestFramePermissions": []
+}
