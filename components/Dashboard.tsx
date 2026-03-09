@@ -90,11 +90,11 @@ export function Dashboard() {
   return (
     <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-gray-400 mb-4">
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">
           FPL Transfer Rater
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Enter your Fantasy Premier League Team ID to analyze your transfers. 
+          Enter your Fantasy Premier League Team ID to analyze your transfers.
           We compare the 3-week average of your new player against the trailing 3-week average of the player you transferred out.
         </p>
       </div>
@@ -106,7 +106,7 @@ export function Dashboard() {
             value={teamId}
             onChange={(e) => setTeamId(e.target.value)}
             placeholder="Enter FPL Team ID (e.g. 123456)"
-            className="w-full pl-4 pr-12 py-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.02] dark:backdrop-blur-xl focus:border-indigo-500 dark:focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-lg font-medium shadow-sm dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            className="w-full pl-4 pr-12 py-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-lg font-medium shadow-sm dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
             required
           />
           <button
@@ -126,7 +126,7 @@ export function Dashboard() {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 p-4 rounded-xl flex items-center gap-3 mb-8"
+          className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-400 p-4 rounded-xl flex items-center gap-3 mb-8"
         >
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
@@ -134,7 +134,7 @@ export function Dashboard() {
       )}
 
       {data && allEvents.length === 0 && (
-        <div className="text-center py-12 bg-white dark:bg-white/[0.02] dark:backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm">
+        <div className="text-center py-12 bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/[0.08] shadow-sm">
           <p className="text-gray-500 dark:text-gray-400 text-lg">No transfers or chips found for this team.</p>
         </div>
       )}
@@ -146,19 +146,19 @@ export function Dashboard() {
           className="space-y-8"
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-white/[0.02] dark:backdrop-blur-xl p-6 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm text-center">
+            <div className="bg-white dark:bg-[#1c1c1e] p-6 rounded-2xl border border-gray-200 dark:border-white/[0.08] shadow-sm text-center">
               <div className="text-3xl font-black text-gray-900 dark:text-white mb-1">{transfers.length}</div>
               <div className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Total</div>
             </div>
-            <div className="bg-emerald-50 dark:bg-emerald-500/10 dark:backdrop-blur-xl p-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 shadow-sm text-center">
+            <div className="bg-emerald-50 dark:bg-emerald-950/50 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm text-center">
               <div className="text-3xl font-black text-emerald-700 dark:text-emerald-400 mb-1">{goodMoves}</div>
               <div className="text-sm text-emerald-600 dark:text-emerald-500 uppercase tracking-wider font-semibold">Good Moves</div>
             </div>
-            <div className="bg-red-50 dark:bg-red-500/10 dark:backdrop-blur-xl p-6 rounded-2xl border border-red-200 dark:border-red-500/20 shadow-sm text-center">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 rounded-2xl border border-red-200 dark:border-red-800/50 shadow-sm text-center">
               <div className="text-3xl font-black text-red-700 dark:text-red-400 mb-1">{pointChasing}</div>
               <div className="text-sm text-red-600 dark:text-red-500 uppercase tracking-wider font-semibold">Chasing</div>
             </div>
-            <div className="bg-amber-50 dark:bg-amber-500/10 dark:backdrop-blur-xl p-6 rounded-2xl border border-amber-200 dark:border-amber-500/20 shadow-sm text-center">
+            <div className="bg-amber-50 dark:bg-amber-950/50 p-6 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm text-center">
               <div className="text-3xl font-black text-amber-700 dark:text-amber-400 mb-1">{tooSoon}</div>
               <div className="text-sm text-amber-600 dark:text-amber-500 uppercase tracking-wider font-semibold">Too Soon</div>
             </div>
@@ -176,9 +176,9 @@ export function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-white dark:bg-white/[0.02] dark:backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm"
+                  className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/[0.08] overflow-hidden shadow-sm"
                 >
-                  <div className="bg-gray-50/80 dark:bg-white/[0.02] px-6 py-4 border-b border-gray-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="bg-gray-50 dark:bg-[#242428] px-6 py-4 border-b border-gray-200 dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">Gameweek {event}</h3>
                     
                     {eventChips.length > 0 && (
@@ -186,7 +186,7 @@ export function Dashboard() {
                         {eventChips.map((chip, chipIdx) => (
                           <div 
                             key={`chip-${chip.name}-${chipIdx}`}
-                            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 rounded-full text-sm font-semibold"
+                            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 dark:bg-indigo-500/20 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-semibold"
                           >
                             <Zap className="w-4 h-4" />
                             {formatChipName(chip.name)}

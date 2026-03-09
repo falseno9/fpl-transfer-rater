@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="font-sans antialiased text-gray-900 bg-gray-50 dark:bg-[#0a0a0a] dark:text-gray-100 selection:bg-indigo-500/30">
+      <body className="font-sans antialiased text-gray-900 bg-gray-50 dark:bg-[#111111] dark:text-gray-100 selection:bg-indigo-500/30">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
             <ThemeToggle />

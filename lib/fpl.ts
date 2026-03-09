@@ -103,13 +103,18 @@ export async function processTransfers(teamId: number): Promise<ProcessedData> {
     const trailingAvg = numTrailingGWs > 0 ? trailingPoints / numTrailingGWs : 0;
 
     let rating: 'Good Move' | 'Point Chasing' | 'Neutral' | 'Too Soon' = 'Neutral';
-    
+
     if (currentEvent < t.event + 2) {
       rating = 'Too Soon';
     } else if (numTrailingGWs > 0) {
-      if (inAvg >= 3 * trailingAvg && inAvg > 0) {
+      const diff = inAvg - trailingAvg;
+      // Good Move: player in is scoring meaningfully better (≥1.5x AND ≥2pts more)
+      // also catches transfers out of a 0-scorer — any positive return qualifies
+      if (inAvg >= trailingAvg * 1.5 && (diff >= 2 || trailingAvg === 0)) {
         rating = 'Good Move';
-      } else if (trailingAvg > 0 && inAvg <= trailingAvg / 3) {
+      // Point Chasing: player in is scoring notably worse (≤0.6x AND ≥2pts less)
+      // require trailingAvg > 2 to avoid flagging transfers out of a bad run
+      } else if (trailingAvg > 2 && inAvg <= trailingAvg * 0.6 && diff <= -2) {
         rating = 'Point Chasing';
       }
     }
