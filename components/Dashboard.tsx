@@ -46,19 +46,20 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
   const transfers = data?.transfers || [];
   const chips = data?.chips || [];
 
-  const goodMoves = transfers.filter(t => t.rating === 'Good Move').length;
+  const greatMoves = transfers.filter(t => t.rating === 'Great Move').length;
   const pointChasing = transfers.filter(t => t.rating === 'Point Chasing').length;
+  const soldTooEarly = transfers.filter(t => t.rating === 'Sold Too Early').length;
+  const sideways = transfers.filter(t => t.rating === 'Sideways').length;
   const tooSoon = transfers.filter(t => t.rating === 'Too Soon').length;
 
-  // Calculate best and worst moves
+  // Calculate best and worst moves using netGain
   const validTransfers = transfers.filter(t => t.rating !== 'Too Soon');
   let maxDiff = -Infinity;
   let minDiff = Infinity;
 
   validTransfers.forEach(t => {
-    const diff = t.playerInAvg - t.playerOutTrailingAvg;
-    if (diff > maxDiff) maxDiff = diff;
-    if (diff < minDiff) minDiff = diff;
+    if (t.netGain > maxDiff) maxDiff = t.netGain;
+    if (t.netGain < minDiff) minDiff = t.netGain;
   });
 
   if (maxDiff <= 0) maxDiff = Infinity;
@@ -122,7 +123,7 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
         {!initialTeamId && (
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Enter your Fantasy Premier League Team ID to analyze your transfers.
-            We compare the 3-week average of your new player against the trailing 3-week average of the player you transferred out.
+            We evaluate each transfer by comparing both players&apos; form before and after the move.
           </p>
         )}
         {statusText && (
@@ -176,22 +177,30 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
           animate={{ opacity: 1 }}
           className="space-y-8"
         >
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-[#1c1c1e] p-6 rounded-2xl border border-gray-200 dark:border-white/[0.08] shadow-sm text-center">
-              <div className="text-3xl font-black text-gray-900 dark:text-white mb-1">{transfers.length}</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Total</div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <div className="bg-white dark:bg-[#1c1c1e] p-4 rounded-2xl border border-gray-200 dark:border-white/[0.08] shadow-sm text-center">
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{transfers.length}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Total</div>
             </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/50 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm text-center">
-              <div className="text-3xl font-black text-emerald-700 dark:text-emerald-400 mb-1">{goodMoves}</div>
-              <div className="text-sm text-emerald-600 dark:text-emerald-500 uppercase tracking-wider font-semibold">Good Moves</div>
+            <div className="bg-emerald-50 dark:bg-emerald-950/50 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm text-center">
+              <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mb-1">{greatMoves}</div>
+              <div className="text-xs text-emerald-600 dark:text-emerald-500 uppercase tracking-wider font-semibold">Great</div>
             </div>
-            <div className="bg-red-50 dark:bg-red-950/50 p-6 rounded-2xl border border-red-200 dark:border-red-800/50 shadow-sm text-center">
-              <div className="text-3xl font-black text-red-700 dark:text-red-400 mb-1">{pointChasing}</div>
-              <div className="text-sm text-red-600 dark:text-red-500 uppercase tracking-wider font-semibold">Chasing</div>
+            <div className="bg-red-50 dark:bg-red-950/50 p-4 rounded-2xl border border-red-200 dark:border-red-800/50 shadow-sm text-center">
+              <div className="text-2xl font-black text-red-700 dark:text-red-400 mb-1">{pointChasing}</div>
+              <div className="text-xs text-red-600 dark:text-red-500 uppercase tracking-wider font-semibold">Chasing</div>
             </div>
-            <div className="bg-amber-50 dark:bg-amber-950/50 p-6 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm text-center">
-              <div className="text-3xl font-black text-amber-700 dark:text-amber-400 mb-1">{tooSoon}</div>
-              <div className="text-sm text-amber-600 dark:text-amber-500 uppercase tracking-wider font-semibold">Too Soon</div>
+            <div className="bg-orange-50 dark:bg-orange-950/50 p-4 rounded-2xl border border-orange-200 dark:border-orange-800/50 shadow-sm text-center">
+              <div className="text-2xl font-black text-orange-700 dark:text-orange-400 mb-1">{soldTooEarly}</div>
+              <div className="text-xs text-orange-600 dark:text-orange-500 uppercase tracking-wider font-semibold">Sold Early</div>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-sm text-center">
+              <div className="text-2xl font-black text-gray-700 dark:text-gray-400 mb-1">{sideways}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Sideways</div>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-950/50 p-4 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm text-center">
+              <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mb-1">{tooSoon}</div>
+              <div className="text-xs text-amber-600 dark:text-amber-500 uppercase tracking-wider font-semibold">Too Soon</div>
             </div>
           </div>
 
@@ -262,9 +271,8 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
                   <div className="p-4 sm:p-6 space-y-4">
                     {eventTransfers.length > 0 ? (
                       eventTransfers.map((transfer, tIdx) => {
-                        const diff = transfer.playerInAvg - transfer.playerOutTrailingAvg;
-                        const isBestMove = transfer.rating !== 'Too Soon' && diff === maxDiff;
-                        const isWorstMove = transfer.rating !== 'Too Soon' && diff === minDiff;
+                        const isBestMove = transfer.rating !== 'Too Soon' && transfer.netGain === maxDiff;
+                        const isWorstMove = transfer.rating !== 'Too Soon' && transfer.netGain === minDiff;
 
                         return (
                           <TransferCard 

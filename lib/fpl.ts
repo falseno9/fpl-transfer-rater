@@ -19,9 +19,12 @@ export interface ProcessedTransfer {
   event: number;
   playerIn: FPLPlayer;
   playerOut: FPLPlayer;
-  playerInAvg: number;
+  playerInTrailingAvg: number;
+  playerInForwardAvg: number;
   playerOutTrailingAvg: number;
-  rating: 'Good Move' | 'Point Chasing' | 'Neutral' | 'Too Soon';
+  playerOutForwardAvg: number;
+  netGain: number;
+  rating: 'Great Move' | 'Point Chasing' | 'Sold Too Early' | 'Sideways' | 'Too Soon';
 }
 
 export interface FPLChip {
@@ -52,9 +55,10 @@ export interface LeagueMember {
   lastRank: number;
   eventTotal: number;
   total: number;
-  goodMoves?: number;
+  greatMoves?: number;
   pointChasing?: number;
-  neutral?: number;
+  soldTooEarly?: number;
+  sideways?: number;
   tooSoon?: number;
   transferCount?: number;
   loaded?: boolean;
@@ -142,42 +146,55 @@ export async function processTransfersWithBootstrap(
     const playerOut = players[t.element_out];
     const summaryIn = summaries[t.element_in];
     const summaryOut = summaries[t.element_out];
-    
-    // Find 3-week average for player IN (GW of transfer + next 2 GWs)
-    const historyIn = summaryIn.history.filter((h: any) => h.round >= t.event && h.round < t.event + 3);
-    const inPoints = historyIn.reduce((sum: number, h: any) => sum + h.total_points, 0);
-    const inAvg = inPoints / 3;
-    
-    // Find trailing average (last 3 GWs before transfer) for player OUT
-    const trailingHistoryOut = summaryOut.history.filter((h: any) => h.round >= t.event - 3 && h.round < t.event);
-    
-    const numTrailingGWs = Math.min(3, t.event - 1);
-    const trailingPoints = trailingHistoryOut.reduce((sum: number, h: any) => sum + h.total_points, 0);
-    const trailingAvg = numTrailingGWs > 0 ? trailingPoints / numTrailingGWs : 0;
 
-    let rating: 'Good Move' | 'Point Chasing' | 'Neutral' | 'Too Soon' = 'Neutral';
+    const numTrailingGWs = Math.min(3, t.event - 1);
+
+    // Player IN trailing average (form before transfer — why you picked them)
+    const inTrailingHistory = summaryIn.history.filter((h: any) => h.round >= t.event - 3 && h.round < t.event);
+    const inTrailingPoints = inTrailingHistory.reduce((sum: number, h: any) => sum + h.total_points, 0);
+    const playerInTrailingAvg = numTrailingGWs > 0 ? inTrailingPoints / numTrailingGWs : 0;
+
+    // Player IN forward average (actual output after transfer)
+    const inForwardHistory = summaryIn.history.filter((h: any) => h.round >= t.event && h.round < t.event + 3);
+    const inForwardPoints = inForwardHistory.reduce((sum: number, h: any) => sum + h.total_points, 0);
+    const playerInForwardAvg = inForwardPoints / 3;
+
+    // Player OUT trailing average (form before transfer)
+    const outTrailingHistory = summaryOut.history.filter((h: any) => h.round >= t.event - 3 && h.round < t.event);
+    const outTrailingPoints = outTrailingHistory.reduce((sum: number, h: any) => sum + h.total_points, 0);
+    const playerOutTrailingAvg = numTrailingGWs > 0 ? outTrailingPoints / numTrailingGWs : 0;
+
+    // Player OUT forward average (performance after you sold them)
+    const outForwardHistory = summaryOut.history.filter((h: any) => h.round >= t.event && h.round < t.event + 3);
+    const outForwardPoints = outForwardHistory.reduce((sum: number, h: any) => sum + h.total_points, 0);
+    const playerOutForwardAvg = outForwardPoints / 3;
+
+    const netGain = playerInForwardAvg - playerOutForwardAvg;
+
+    let rating: ProcessedTransfer['rating'] = 'Sideways';
 
     if (currentEvent < t.event + 2) {
       rating = 'Too Soon';
-    } else if (numTrailingGWs > 0) {
-      const diff = inAvg - trailingAvg;
-      // Good Move: player in is scoring meaningfully better (≥1.5x AND ≥2pts more)
-      // also catches transfers out of a 0-scorer — any positive return qualifies
-      if (inAvg >= trailingAvg * 1.5 && (diff >= 2 || trailingAvg === 0)) {
-        rating = 'Good Move';
-      // Point Chasing: player in is scoring notably worse (≤0.6x AND ≥2pts less)
-      // require trailingAvg > 2 to avoid flagging transfers out of a bad run
-      } else if (trailingAvg > 2 && inAvg <= trailingAvg * 0.6 && diff <= -2) {
-        rating = 'Point Chasing';
-      }
+    } else if (netGain >= 1.5) {
+      // Great Move: your new player clearly outscores the old one
+      rating = 'Great Move';
+    } else if (playerInTrailingAvg >= 1.5 && playerInForwardAvg <= playerInTrailingAvg * 0.6) {
+      // Point Chasing: you bought a player whose form was fading
+      rating = 'Point Chasing';
+    } else if (playerOutForwardAvg >= playerOutTrailingAvg + 2.0 && netGain <= -1.5) {
+      // Sold Too Early: player you sold started performing and your replacement is worse
+      rating = 'Sold Too Early';
     }
 
     return {
       event: t.event,
       playerIn,
       playerOut,
-      playerInAvg: inAvg,
-      playerOutTrailingAvg: trailingAvg,
+      playerInTrailingAvg,
+      playerInForwardAvg,
+      playerOutTrailingAvg,
+      playerOutForwardAvg,
+      netGain,
       rating
     };
   });

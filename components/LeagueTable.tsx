@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getLeagueStandings, getBootstrap, processTransfersWithBootstrap, LeagueMember } from '@/lib/fpl';
-import { Loader2, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Minus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Minus, TrendingUp, TrendingDown, Undo2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
@@ -91,9 +91,10 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
               return {
                 entry: member.entry,
                 transferCount: data.transfers.length,
-                goodMoves: data.transfers.filter(t => t.rating === 'Good Move').length,
+                greatMoves: data.transfers.filter(t => t.rating === 'Great Move').length,
                 pointChasing: data.transfers.filter(t => t.rating === 'Point Chasing').length,
-                neutral: data.transfers.filter(t => t.rating === 'Neutral').length,
+                soldTooEarly: data.transfers.filter(t => t.rating === 'Sold Too Early').length,
+                sideways: data.transfers.filter(t => t.rating === 'Sideways').length,
                 tooSoon: data.transfers.filter(t => t.rating === 'Too Soon').length,
                 loaded: true,
                 error: false,
@@ -209,13 +210,16 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                   <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs">Manager</th>
                   <th className="text-right px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs">GW</th>
                   <th className="text-right px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs">Total</th>
-                  <th className="text-center px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs" title="Great Moves">
                     <TrendingUp className="w-4 h-4 mx-auto" />
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider text-xs" title="Point Chasing">
                     <TrendingDown className="w-4 h-4 mx-auto" />
                   </th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-400 uppercase tracking-wider text-xs">
+                  <th className="text-center px-4 py-3 font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider text-xs" title="Sold Too Early">
+                    <Undo2 className="w-4 h-4 mx-auto" />
+                  </th>
+                  <th className="text-center px-4 py-3 font-semibold text-gray-400 uppercase tracking-wider text-xs" title="Sideways">
                     <Minus className="w-4 h-4 mx-auto" />
                   </th>
                 </tr>
@@ -256,7 +260,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                         member.error ? (
                           <span className="text-gray-300 dark:text-gray-600">-</span>
                         ) : (
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{member.goodMoves}</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{member.greatMoves}</span>
                         )
                       ) : (
                         <Loader2 className="w-4 h-4 animate-spin text-gray-300 dark:text-gray-600 mx-auto" />
@@ -278,7 +282,18 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                         member.error ? (
                           <span className="text-gray-300 dark:text-gray-600">-</span>
                         ) : (
-                          <span className="font-medium text-gray-500 dark:text-gray-400">{member.neutral}</span>
+                          <span className="font-bold text-orange-600 dark:text-orange-400">{member.soldTooEarly}</span>
+                        )
+                      ) : (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-300 dark:text-gray-600 mx-auto" />
+                      )}
+                    </td>
+                    <td className="px-4 py-3 border-b border-gray-100 dark:border-white/[0.04] text-center">
+                      {member.loaded ? (
+                        member.error ? (
+                          <span className="text-gray-300 dark:text-gray-600">-</span>
+                        ) : (
+                          <span className="font-medium text-gray-500 dark:text-gray-400">{member.sideways}</span>
                         )
                       ) : (
                         <Loader2 className="w-4 h-4 animate-spin text-gray-300 dark:text-gray-600 mx-auto" />

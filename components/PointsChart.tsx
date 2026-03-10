@@ -13,9 +13,10 @@ import {
 } from 'recharts';
 
 const ratingColors: Record<string, string> = {
-  'Good Move': '#059669',
+  'Great Move': '#059669',
   'Point Chasing': '#dc2626',
-  'Neutral': '#9ca3af',
+  'Sold Too Early': '#ea580c',
+  'Sideways': '#9ca3af',
   'Too Soon': '#d97706',
 };
 
@@ -30,9 +31,8 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
   let bestDiff = -Infinity;
   let worstDiff = Infinity;
   ratedTransfers.forEach(t => {
-    const diff = t.playerInAvg - t.playerOutTrailingAvg;
-    if (diff > bestDiff) bestDiff = diff;
-    if (diff < worstDiff) worstDiff = diff;
+    if (t.netGain > bestDiff) bestDiff = t.netGain;
+    if (t.netGain < worstDiff) worstDiff = t.netGain;
   });
   if (bestDiff <= 0) bestDiff = Infinity;
   if (worstDiff >= 0) worstDiff = -Infinity;
@@ -45,7 +45,7 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
 
   // Rating severity: lower = better, higher = worse
   const ratingSeverity: Record<string, number> = {
-    'Good Move': 0, 'Neutral': 1, 'Too Soon': 2, 'Point Chasing': 3,
+    'Great Move': 0, 'Sideways': 1, 'Too Soon': 2, 'Sold Too Early': 3, 'Point Chasing': 4,
   };
 
   // For GWs with 1-2 transfers, show individual dots.
@@ -108,7 +108,7 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
                   {gwTransfers && (
                     <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/10 space-y-1.5">
                       {gwTransfers.map((t, i) => {
-                        const diff = t.playerInAvg - t.playerOutTrailingAvg;
+                        const diff = t.netGain;
                         const isBest = t.rating !== 'Too Soon' && diff === bestDiff;
                         const isWorst = t.rating !== 'Too Soon' && diff === worstDiff;
                         return (
@@ -160,9 +160,10 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
         </LineChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" />Good Move</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" />Great Move</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-600 inline-block" />Point Chasing</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />Neutral</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-orange-600 inline-block" />Sold Too Early</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />Sideways</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />Too Soon</span>
       </div>
     </div>

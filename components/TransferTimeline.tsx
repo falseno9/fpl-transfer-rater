@@ -4,11 +4,11 @@ import { ProcessedTransfer } from '@/lib/fpl';
 import { motion } from 'motion/react';
 
 const ratingConfig: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  'Good Move': {
+  'Great Move': {
     bg: 'bg-emerald-50 dark:bg-emerald-950/50',
     text: 'text-emerald-700 dark:text-emerald-400',
     dot: 'bg-emerald-500',
-    label: 'Good Move',
+    label: 'Great Move',
   },
   'Point Chasing': {
     bg: 'bg-red-50 dark:bg-red-950/50',
@@ -16,11 +16,17 @@ const ratingConfig: Record<string, { bg: string; text: string; dot: string; labe
     dot: 'bg-red-500',
     label: 'Point Chasing',
   },
-  'Neutral': {
+  'Sold Too Early': {
+    bg: 'bg-orange-50 dark:bg-orange-950/50',
+    text: 'text-orange-700 dark:text-orange-400',
+    dot: 'bg-orange-500',
+    label: 'Sold Too Early',
+  },
+  'Sideways': {
     bg: 'bg-gray-50 dark:bg-gray-800/50',
     text: 'text-gray-600 dark:text-gray-400',
     dot: 'bg-gray-400',
-    label: 'Neutral',
+    label: 'Sideways',
   },
   'Too Soon': {
     bg: 'bg-amber-50 dark:bg-amber-950/50',

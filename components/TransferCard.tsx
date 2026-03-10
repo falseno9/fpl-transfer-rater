@@ -1,5 +1,5 @@
 import { ProcessedTransfer } from '@/lib/fpl';
-import { ArrowRight, TrendingDown, TrendingUp, Minus, Clock, Trophy, Frown } from 'lucide-react';
+import { ArrowRight, TrendingDown, TrendingUp, Minus, Clock, Trophy, Frown, Undo2 } from 'lucide-react';
 
 export function TransferCard({ 
   transfer,
@@ -10,9 +10,10 @@ export function TransferCard({
   isBestMove?: boolean;
   isWorstMove?: boolean;
 }) {
-  const isGood = transfer.rating === 'Good Move';
+  const isGreat = transfer.rating === 'Great Move';
   const isChasing = transfer.rating === 'Point Chasing';
-  const isNeutral = transfer.rating === 'Neutral';
+  const isSoldTooEarly = transfer.rating === 'Sold Too Early';
+  const isSideways = transfer.rating === 'Sideways';
   const isTooSoon = transfer.rating === 'Too Soon';
 
   return (
@@ -45,26 +46,30 @@ export function TransferCard({
 
       <div className="flex items-center gap-6 bg-gray-50 dark:bg-black/30 rounded-lg p-3 sm:bg-transparent sm:dark:bg-transparent sm:p-0">
         <div className="flex flex-col items-end">
-          <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Trailing Avg</span>
-          <span className="font-mono text-gray-700 dark:text-gray-300">{transfer.playerOutTrailingAvg.toFixed(1)} pts</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">IN form</span>
+          <span className="font-mono text-gray-700 dark:text-gray-300">
+            {isTooSoon ? '-' : `${transfer.playerInTrailingAvg.toFixed(1)} → ${transfer.playerInForwardAvg.toFixed(1)}`}
+          </span>
         </div>
-        
+
         <div className="flex flex-col items-end">
-          <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">New Avg</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">OUT after</span>
           <span className="font-mono font-bold text-gray-900 dark:text-gray-100">
-            {isTooSoon ? '-' : `${transfer.playerInAvg.toFixed(1)} pts`}
+            {isTooSoon ? '-' : `${transfer.playerOutForwardAvg.toFixed(1)} pts`}
           </span>
         </div>
 
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium shrink-0 w-36 justify-center border
-          ${isGood ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/60 dark:border-emerald-700/40 dark:text-emerald-400' : ''}
+          ${isGreat ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/60 dark:border-emerald-700/40 dark:text-emerald-400' : ''}
           ${isChasing ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-950/60 dark:border-red-700/40 dark:text-red-400' : ''}
-          ${isNeutral ? 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-white/[0.06] dark:border-white/10 dark:text-gray-300' : ''}
+          ${isSoldTooEarly ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/60 dark:border-orange-700/40 dark:text-orange-400' : ''}
+          ${isSideways ? 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-white/[0.06] dark:border-white/10 dark:text-gray-300' : ''}
           ${isTooSoon ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/60 dark:border-amber-700/40 dark:text-amber-400' : ''}
         `}>
-          {isGood && <TrendingUp className="w-4 h-4" />}
+          {isGreat && <TrendingUp className="w-4 h-4" />}
           {isChasing && <TrendingDown className="w-4 h-4" />}
-          {isNeutral && <Minus className="w-4 h-4" />}
+          {isSoldTooEarly && <Undo2 className="w-4 h-4" />}
+          {isSideways && <Minus className="w-4 h-4" />}
           {isTooSoon && <Clock className="w-4 h-4" />}
           {transfer.rating}
         </div>
