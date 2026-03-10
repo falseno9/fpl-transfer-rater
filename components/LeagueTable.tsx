@@ -15,19 +15,33 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
   const [error, setError] = useState('');
   const [currentEvent, setCurrentEvent] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const loadStandings = useCallback(async () => {
-    setLoading(true);
+  const loadStandings = useCallback(async (page = 1) => {
+    if (page === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     setError('');
     try {
-      const data = await getLeagueStandings(parseInt(leagueId, 10));
+      const data = await getLeagueStandings(parseInt(leagueId, 10), page);
       setLeagueName(data.name);
-      setMembers(data.members);
+      setHasNextPage(data.hasNext);
+      setCurrentPage(page);
+      if (page === 1) {
+        setMembers(data.members);
+      } else {
+        setMembers(prev => [...prev, ...data.members]);
+      }
       setLastUpdated(new Date());
     } catch {
       setError('Failed to fetch league standings. Please check the League ID and try again.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, [leagueId]);
 
@@ -80,8 +94,9 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
   }, [loadStandings]);
 
   useEffect(() => {
-    if (members.length > 0 && !members[0].loaded && !transfersLoading) {
-      loadTransferRatings(members);
+    const unloaded = members.filter(m => !m.loaded);
+    if (unloaded.length > 0 && !transfersLoading) {
+      loadTransferRatings(unloaded);
     }
   }, [members, transfersLoading, loadTransferRatings]);
 
@@ -237,6 +252,25 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
             </table>
           </div>
         </div>
+
+        {hasNextPage && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => loadStandings(currentPage + 1)}
+              disabled={loadingMore}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load More'
+              )}
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );
