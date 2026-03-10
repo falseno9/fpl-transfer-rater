@@ -30,10 +30,18 @@ export interface FPLChip {
   time: string;
 }
 
+export interface GameweekHistory {
+  event: number;
+  points: number;
+  totalPoints: number;
+  overallRank: number;
+}
+
 export interface ProcessedData {
   transfers: ProcessedTransfer[];
   chips: FPLChip[];
   currentEvent: number;
+  gameweekHistory: GameweekHistory[];
 }
 
 export interface LeagueMember {
@@ -174,10 +182,18 @@ export async function processTransfersWithBootstrap(
     };
   });
 
+  const gameweekHistory: GameweekHistory[] = (history.current || []).map((gw: any) => ({
+    event: gw.event,
+    points: gw.points,
+    totalPoints: gw.total_points,
+    overallRank: gw.overall_rank,
+  }));
+
   return {
     transfers: processed.sort((a, b) => b.event - a.event),
     chips: history.chips || [],
     currentEvent,
+    gameweekHistory,
   };
 }
 
