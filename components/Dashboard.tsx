@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { processTransfers, ProcessedData, ProcessedTransfer, FPLChip } from '@/lib/fpl';
 import { TransferCard } from '@/components/TransferCard';
-import { Loader2, Search, AlertCircle, Zap, ArrowLeft } from 'lucide-react';
+import { PointsChart } from '@/components/PointsChart';
+import { TransferTimeline } from '@/components/TransferTimeline';
+import { Loader2, Search, AlertCircle, Zap, ArrowLeft, BarChart3, List } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
@@ -13,6 +15,7 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
   const [error, setError] = useState('');
   const [data, setData] = useState<ProcessedData | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<'transfers' | 'charts'>('transfers');
 
   const fetchData = useCallback(async (id: string) => {
     if (!id.trim()) return;
@@ -192,7 +195,39 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
             </div>
           </div>
 
-          <div className="space-y-8">
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab('transfers')}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                activeTab === 'transfers'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 dark:bg-[#2c2c2e] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#3a3a3c]'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              Transfers
+            </button>
+            <button
+              onClick={() => setActiveTab('charts')}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                activeTab === 'charts'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 dark:bg-[#2c2c2e] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#3a3a3c]'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Charts
+            </button>
+          </div>
+
+          {activeTab === 'charts' && (
+            <div className="space-y-6">
+              <PointsChart gameweekHistory={data.gameweekHistory} transfers={transfers} />
+              <TransferTimeline transfers={transfers} />
+            </div>
+          )}
+
+          {activeTab === 'transfers' && <div className="space-y-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Transfer History</h2>
             {allEvents.map((event, idx) => {
               const eventTransfers = transfersByEvent[event] || [];
@@ -247,7 +282,7 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
                 </motion.div>
               );
             })}
-          </div>
+          </div>}
         </motion.div>
       )}
     </div>
