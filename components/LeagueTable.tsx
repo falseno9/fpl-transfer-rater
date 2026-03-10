@@ -6,18 +6,42 @@ import { Loader2, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Minus, Trendin
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
+interface LeagueCache {
+  leagueName: string;
+  members: LeagueMember[];
+  currentPage: number;
+  hasNextPage: boolean;
+  currentEvent: number | null;
+  lastUpdated: Date;
+}
+
+const leagueCache = new Map<string, LeagueCache>();
+
 export function LeagueTable({ leagueId }: { leagueId: string }) {
-  const [leagueName, setLeagueName] = useState('');
-  const [members, setMembers] = useState<LeagueMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = leagueCache.get(leagueId);
+  const [leagueName, setLeagueName] = useState(cached?.leagueName ?? '');
+  const [members, setMembers] = useState<LeagueMember[]>(cached?.members ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [transfersLoading, setTransfersLoading] = useState(false);
   const [transfersLoaded, setTransfersLoaded] = useState(0);
   const [error, setError] = useState('');
-  const [currentEvent, setCurrentEvent] = useState<number | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState<number | null>(cached?.currentEvent ?? null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(cached?.lastUpdated ?? null);
+  const [currentPage, setCurrentPage] = useState(cached?.currentPage ?? 1);
+  const [hasNextPage, setHasNextPage] = useState(cached?.hasNextPage ?? false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const updateCache = useCallback((updates: Partial<LeagueCache>) => {
+    const current = leagueCache.get(leagueId);
+    leagueCache.set(leagueId, {
+      leagueName: updates.leagueName ?? current?.leagueName ?? '',
+      members: updates.members ?? current?.members ?? [],
+      currentPage: updates.currentPage ?? current?.currentPage ?? 1,
+      hasNextPage: updates.hasNextPage ?? current?.hasNextPage ?? false,
+      currentEvent: updates.currentEvent ?? current?.currentEvent ?? null,
+      lastUpdated: updates.lastUpdated ?? current?.lastUpdated ?? new Date(),
+    });
+  }, [leagueId]);
 
   const loadStandings = useCallback(async (page = 1) => {
     if (page === 1) {
@@ -31,19 +55,25 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
       setLeagueName(data.name);
       setHasNextPage(data.hasNext);
       setCurrentPage(page);
+      const now = new Date();
       if (page === 1) {
         setMembers(data.members);
+        updateCache({ leagueName: data.name, members: data.members, hasNextPage: data.hasNext, currentPage: page, lastUpdated: now });
       } else {
-        setMembers(prev => [...prev, ...data.members]);
+        setMembers(prev => {
+          const updated = [...prev, ...data.members];
+          updateCache({ members: updated, hasNextPage: data.hasNext, currentPage: page, lastUpdated: now });
+          return updated;
+        });
       }
-      setLastUpdated(new Date());
+      setLastUpdated(now);
     } catch {
       setError('Failed to fetch league standings. Please check the League ID and try again.');
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [leagueId]);
+  }, [leagueId, updateCache]);
 
   const loadTransferRatings = useCallback(async (entries: LeagueMember[]) => {
     setTransfersLoading(true);
@@ -74,24 +104,32 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
           })
         );
 
-        setMembers(prev => prev.map(m => {
-          const result = results.find(r => r.entry === m.entry);
-          return result ? { ...m, ...result } : m;
-        }));
+        setMembers(prev => {
+          const updated = prev.map(m => {
+            const result = results.find(r => r.entry === m.entry);
+            return result ? { ...m, ...result } : m;
+          });
+          updateCache({ members: updated });
+          return updated;
+        });
         setTransfersLoaded(prev => prev + batch.length);
       }
-      setLastUpdated(new Date());
+      const now = new Date();
+      setLastUpdated(now);
+      updateCache({ currentEvent: current, lastUpdated: now });
     } catch {
       // bootstrap fetch failed — mark all as error
       setMembers(prev => prev.map(m => ({ ...m, loaded: true, error: true })));
     } finally {
       setTransfersLoading(false);
     }
-  }, []);
+  }, [updateCache]);
 
   useEffect(() => {
-    loadStandings();
-  }, [loadStandings]);
+    if (!leagueCache.has(leagueId)) {
+      loadStandings();
+    }
+  }, [leagueId, loadStandings]);
 
   useEffect(() => {
     const unloaded = members.filter(m => !m.loaded);
