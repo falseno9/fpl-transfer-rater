@@ -92,6 +92,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                 entry: member.entry,
                 transferCount: data.transfers.length,
                 greatMoves: data.transfers.filter(t => t.rating === 'Great Move').length,
+                goodMoves: data.transfers.filter(t => t.rating === 'Good Move').length,
                 pointChasing: data.transfers.filter(t => t.rating === 'Point Chasing').length,
                 soldTooEarly: data.transfers.filter(t => t.rating === 'Sold Too Early').length,
                 sideways: data.transfers.filter(t => t.rating === 'Sideways').length,
@@ -210,7 +211,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                   <th className="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs">Manager</th>
                   <th className="text-right px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs">GW</th>
                   <th className="text-right px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs">Total</th>
-                  <th className="text-center px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs" title="Great Moves">
+                  <th className="text-center px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-xs" title="Great + Good Moves">
                     <TrendingUp className="w-4 h-4 mx-auto" />
                   </th>
                   <th className="text-center px-4 py-3 font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider text-xs" title="Point Chasing">
@@ -260,7 +261,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
                         member.error ? (
                           <span className="text-gray-300 dark:text-gray-600">-</span>
                         ) : (
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{member.greatMoves}</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{(member.greatMoves ?? 0) + (member.goodMoves ?? 0)}</span>
                         )
                       ) : (
                         <Loader2 className="w-4 h-4 animate-spin text-gray-300 dark:text-gray-600 mx-auto" />

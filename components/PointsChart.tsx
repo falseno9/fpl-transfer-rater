@@ -1,6 +1,6 @@
 'use client';
 
-import { GameweekHistory, ProcessedTransfer } from '@/lib/fpl';
+import { GameweekHistory, ProcessedTransfer, getWeeklyScore } from '@/lib/fpl';
 import {
   LineChart,
   Line,
@@ -14,10 +14,20 @@ import {
 
 const ratingColors: Record<string, string> = {
   'Great Move': '#059669',
+  'Good Move': '#65a30d',
   'Point Chasing': '#dc2626',
   'Sold Too Early': '#ea580c',
   'Sideways': '#9ca3af',
   'Too Soon': '#d97706',
+};
+
+const tierDotColors: Record<string, string> = {
+  great: '#059669',    // emerald
+  good: '#65a30d',     // lime
+  neutral: '#9ca3af',  // gray
+  bad: '#ea580c',      // orange
+  terrible: '#dc2626', // red
+  toosoon: '#d97706',  // amber
 };
 
 interface PointsChartProps {
@@ -26,56 +36,22 @@ interface PointsChartProps {
 }
 
 export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
-  // Find best and worst transfers (excluding Too Soon)
-  const ratedTransfers = transfers.filter(t => t.rating !== 'Too Soon');
-  let bestDiff = -Infinity;
-  let worstDiff = Infinity;
-  ratedTransfers.forEach(t => {
-    if (t.netGain > bestDiff) bestDiff = t.netGain;
-    if (t.netGain < worstDiff) worstDiff = t.netGain;
-  });
-  if (bestDiff <= 0) bestDiff = Infinity;
-  if (worstDiff >= 0) worstDiff = -Infinity;
-
   const transfersByEvent = transfers.reduce((acc, t) => {
     if (!acc[t.event]) acc[t.event] = [];
     acc[t.event].push(t);
     return acc;
   }, {} as Record<number, ProcessedTransfer[]>);
 
-  // Rating severity: lower = better, higher = worse
-  const ratingSeverity: Record<string, number> = {
-    'Great Move': 0, 'Sideways': 1, 'Too Soon': 2, 'Sold Too Early': 3, 'Point Chasing': 4,
-  };
-
-  // For GWs with 1-2 transfers, show individual dots.
-  // For GWs with 3+ (Wildcard/Free Hit), show best + worst rating (or one if all same).
+  // One dot per GW, colored by weekly score (includes hits)
   const transferDots = gameweekHistory
     .filter(gw => transfersByEvent[gw.event])
-    .flatMap(gw => {
-      const gwTransfers = transfersByEvent[gw.event];
-      if (gwTransfers.length === 1) {
-        return [{ event: gw.event, points: gw.points, rating: gwTransfers[0].rating }];
-      }
-      if (gwTransfers.length === 2) {
-        return gwTransfers.map((t, i) => ({
-          event: gw.event,
-          points: gw.points + (i === 0 ? -3 : 3),
-          rating: t.rating,
-        }));
-      }
-      // 3+ transfers: show best and worst ratings present
-      const ratings = [...new Set(gwTransfers.map(t => t.rating))];
-      ratings.sort((a, b) => ratingSeverity[a] - ratingSeverity[b]);
-      const best = ratings[0];
-      const worst = ratings[ratings.length - 1];
-      if (best === worst) {
-        return [{ event: gw.event, points: gw.points, rating: best }];
-      }
-      return [
-        { event: gw.event, points: gw.points + 3, rating: best },
-        { event: gw.event, points: gw.points - 3, rating: worst },
-      ];
+    .map(gw => {
+      const weekly = getWeeklyScore(transfersByEvent[gw.event], gw.transfersCost);
+      return {
+        event: gw.event,
+        points: gw.points,
+        color: tierDotColors[weekly.tier],
+      };
     });
 
   return (
@@ -105,13 +81,21 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
                 <div className="bg-white dark:bg-[#2c2c2e] border border-gray-200 dark:border-white/10 rounded-xl p-3 shadow-lg text-sm">
                   <div className="font-bold text-gray-900 dark:text-white mb-1">GW {data.event}</div>
                   <div className="text-gray-600 dark:text-gray-400">{data.points} pts</div>
-                  {gwTransfers && (
-                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/10 space-y-1.5">
-                      {gwTransfers.map((t, i) => {
-                        const diff = t.netGain;
-                        const isBest = t.rating !== 'Too Soon' && diff === bestDiff;
-                        const isWorst = t.rating !== 'Too Soon' && diff === worstDiff;
-                        return (
+                  {gwTransfers && (() => {
+                    const hitCost = data.transfersCost ?? 0;
+                    const weekly = getWeeklyScore(gwTransfers, hitCost);
+                    return (
+                      <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/10 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {gwTransfers.length} transfer{gwTransfers.length !== 1 ? 's' : ''}
+                            {hitCost > 0 ? ` (−${hitCost} hit)` : ''}
+                          </span>
+                          <span className={weekly.tier === 'toosoon' ? 'text-amber-500' : weekly.score >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                            {weekly.label}
+                          </span>
+                        </div>
+                        {gwTransfers.map((t, i) => (
                           <div key={i} className="flex items-center gap-2 text-xs">
                             <span
                               className="w-2 h-2 rounded-full shrink-0"
@@ -123,17 +107,15 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
                               <span className="text-emerald-600 dark:text-emerald-400">{t.playerIn.web_name}</span>
                             </span>
                             {t.rating !== 'Too Soon' && (
-                              <span className={`font-mono font-bold ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                                {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
+                              <span className={`font-mono font-bold ${t.netGain >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                {t.netGain >= 0 ? '+' : ''}{t.netGain.toFixed(1)}
                               </span>
                             )}
-                            {isBest && <span className="text-[10px] font-bold text-amber-500">BEST</span>}
-                            {isWorst && <span className="text-[10px] font-bold text-red-500">WORST</span>}
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             }}
@@ -148,11 +130,11 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
           />
           {transferDots.map((dot, i) => (
             <ReferenceDot
-              key={`${dot.event}-${dot.rating}-${i}`}
+              key={`${dot.event}-${i}`}
               x={dot.event}
               y={dot.points}
               r={7}
-              fill={ratingColors[dot.rating]}
+              fill={dot.color}
               stroke="white"
               strokeWidth={2}
             />
@@ -160,10 +142,11 @@ export function PointsChart({ gameweekHistory, transfers }: PointsChartProps) {
         </LineChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" />Great Move</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-600 inline-block" />Point Chasing</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-orange-600 inline-block" />Sold Too Early</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />Sideways</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600 inline-block" />Great (+10)</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-lime-600 inline-block" />Good (+5)</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />OK (+3)</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-orange-600 inline-block" />Bad (≤+2)</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-600 inline-block" />Terrible (&lt;0)</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />Too Soon</span>
       </div>
     </div>

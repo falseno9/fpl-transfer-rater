@@ -24,7 +24,7 @@ export interface ProcessedTransfer {
   playerOutTrailingAvg: number;
   playerOutForwardAvg: number;
   netGain: number;
-  rating: 'Great Move' | 'Point Chasing' | 'Sold Too Early' | 'Sideways' | 'Too Soon';
+  rating: 'Great Move' | 'Good Move' | 'Point Chasing' | 'Sold Too Early' | 'Sideways' | 'Too Soon';
 }
 
 export interface FPLChip {
@@ -38,6 +38,34 @@ export interface GameweekHistory {
   points: number;
   totalPoints: number;
   overallRank: number;
+  transfersCost: number;
+}
+
+export interface WeeklyScore {
+  score: number;
+  label: string;
+  tier: 'great' | 'good' | 'neutral' | 'bad' | 'terrible' | 'toosoon';
+}
+
+export function getWeeklyScore(
+  transfers: ProcessedTransfer[],
+  hitCost: number
+): WeeklyScore {
+  const rated = transfers.filter(t => t.rating !== 'Too Soon');
+  if (transfers.length > 0 && rated.length === 0) {
+    return { score: 0, label: 'Too Soon', tier: 'toosoon' };
+  }
+  // Total points gained over 3 GWs, minus hit cost
+  const totalGain = rated.reduce((sum, t) => sum + t.netGain * 3, 0);
+  const score = totalGain - hitCost;
+  const sign = score >= 0 ? '+' : '';
+  const label = `${sign}${score.toFixed(0)}`;
+
+  if (score >= 10) return { score, label, tier: 'great' };
+  if (score >= 5) return { score, label, tier: 'good' };
+  if (score > 2) return { score, label, tier: 'neutral' };
+  if (score >= 0) return { score, label, tier: 'bad' };
+  return { score, label, tier: 'terrible' };
 }
 
 export interface ProcessedData {
@@ -56,6 +84,7 @@ export interface LeagueMember {
   eventTotal: number;
   total: number;
   greatMoves?: number;
+  goodMoves?: number;
   pointChasing?: number;
   soldTooEarly?: number;
   sideways?: number;
@@ -175,9 +204,12 @@ export async function processTransfersWithBootstrap(
 
     if (currentEvent < t.event + 2) {
       rating = 'Too Soon';
-    } else if (netGain >= 1.5) {
-      // Great Move: your new player clearly outscores the old one
+    } else if (netGain >= 1.5 && playerInForwardAvg >= playerInTrailingAvg) {
+      // Great Move: new player outscores the sold one AND maintained or increased their own avg
       rating = 'Great Move';
+    } else if (netGain >= 1.5) {
+      // Good Move: new player outscores the sold one, but their form dipped from before
+      rating = 'Good Move';
     } else if (playerInTrailingAvg >= 1.5 && playerInForwardAvg <= playerInTrailingAvg * 0.6) {
       // Point Chasing: you bought a player whose form was fading
       rating = 'Point Chasing';
@@ -204,6 +236,7 @@ export async function processTransfersWithBootstrap(
     points: gw.points,
     totalPoints: gw.total_points,
     overallRank: gw.overall_rank,
+    transfersCost: gw.event_transfers_cost ?? 0,
   }));
 
   return {
