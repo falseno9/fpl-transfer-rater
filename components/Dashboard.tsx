@@ -18,12 +18,14 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
   const [activeTab, setActiveTab] = useState<'transfers' | 'charts'>('transfers');
 
   const fetchData = useCallback(async (id: string) => {
-    if (!id.trim()) return;
+    const trimmed = id.trim();
+    if (!trimmed) return;
+    setTeamId(trimmed);
     setLoading(true);
     setError('');
     setData(null);
     try {
-      const result = await processTransfers(parseInt(id, 10));
+      const result = await processTransfers(parseInt(trimmed, 10));
       setData(result);
       setLastUpdated(new Date());
     } catch (err) {
@@ -151,7 +153,10 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
       <form onSubmit={handleSearch} className="max-w-md mx-auto mb-12">
         <div className="relative flex items-center">
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9\s]*"
+            title="Please enter a numeric Team ID"
             value={teamId}
             onChange={(e) => setTeamId(e.target.value)}
             placeholder="Enter FPL Team ID (e.g. 123456)"
@@ -189,11 +194,29 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
       )}
 
       {data && allEvents.length > 0 && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-8"
         >
+          {teamId === '159021' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-400 p-4 rounded-xl text-center text-sm font-medium"
+            >
+              Save yourself the analysis — just copy <a href="https://fantasy.premierleague.com/entry/133463/history" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900 dark:hover:text-indigo-300">my team</a>
+            </motion.div>
+          )}
+          {teamId === '6032721' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-400 p-4 rounded-xl text-center text-sm font-medium"
+            >
+              Why check transfers when you could just bet on the horses instead?
+            </motion.div>
+          )}
           <div>
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Gameweeks</h3>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
