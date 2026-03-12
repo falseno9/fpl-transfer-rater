@@ -209,16 +209,16 @@ export async function processTransfersWithBootstrap(
 
     if (currentEvent < t.event + 2) {
       rating = 'Too Soon';
-    } else if (netGain >= 1.5 && playerInForwardAvg >= playerInTrailingAvg) {
+    } else if (netGain >= 1.0 && playerInForwardAvg >= playerInTrailingAvg) {
       // Great Move: new player outscores the sold one AND maintained or increased their own avg
       rating = 'Great Move';
-    } else if (netGain >= 1.5) {
+    } else if (netGain >= 1.0) {
       // Good Move: new player outscores the sold one, but their form dipped from before
       rating = 'Good Move';
-    } else if (playerInTrailingAvg >= 1.5 && playerInForwardAvg <= playerInTrailingAvg * 0.6) {
-      // Point Chasing: you bought a player whose form was fading
+    } else if (playerInTrailingAvg >= 1.5 && playerInForwardAvg <= playerInTrailingAvg * 0.5) {
+      // Point Chasing: you bought a player whose form was fading (50%+ drop)
       rating = 'Point Chasing';
-    } else if (playerOutForwardAvg >= playerOutTrailingAvg + 2.0 && netGain <= -1.5) {
+    } else if (playerOutForwardAvg >= playerOutTrailingAvg + 1.5 && netGain <= -1.0) {
       // Sold Too Early: player you sold started performing and your replacement is worse
       rating = 'Sold Too Early';
     }
