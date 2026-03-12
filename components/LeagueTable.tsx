@@ -51,7 +51,7 @@ export function LeagueTable({ leagueId }: { leagueId: string }) {
     }
     setError('');
     try {
-      const data = await getLeagueStandings(parseInt(leagueId, 10), page);
+      const data = await getLeagueStandings(parseInt(leagueId.trim(), 10), page);
       setLeagueName(data.name);
       setHasNextPage(data.hasNext);
       setCurrentPage(page);

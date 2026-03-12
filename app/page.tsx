@@ -59,7 +59,10 @@ export default function Home() {
             <form onSubmit={handleTeamSearch}>
               <div className="relative flex items-center">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9\s]*"
+                  title="Please enter a numeric Team ID"
                   value={teamId}
                   onChange={(e) => setTeamId(e.target.value)}
                   placeholder="Team ID"
@@ -99,7 +102,10 @@ export default function Home() {
             <form onSubmit={handleLeagueSearch}>
               <div className="relative flex items-center">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9\s]*"
+                  title="Please enter a numeric League ID"
                   value={leagueId}
                   onChange={(e) => setLeagueId(e.target.value)}
                   placeholder="League ID"
