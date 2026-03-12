@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ProcessedTransfer, GameweekHistory, getWeeklyScore } from '@/lib/fpl';
+import { ProcessedTransfer, GameweekHistory, FPLChip, getWeeklyScore } from '@/lib/fpl';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 
@@ -51,20 +51,27 @@ const tierStyles: Record<string, { color: string; dot: string }> = {
   bad: { color: 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400', dot: 'bg-orange-500' },
   terrible: { color: 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400', dot: 'bg-red-500' },
   toosoon: { color: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400', dot: 'bg-amber-500' },
+  freehit: { color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400', dot: 'bg-indigo-500' },
 };
 
 interface TransferTimelineProps {
   transfers: ProcessedTransfer[];
   gameweekHistory: GameweekHistory[];
+  chips?: FPLChip[];
 }
 
-export function TransferTimeline({ transfers, gameweekHistory }: TransferTimelineProps) {
+export function TransferTimeline({ transfers, gameweekHistory, chips = [] }: TransferTimelineProps) {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
 
   const hitCostByEvent = gameweekHistory.reduce((acc, gw) => {
     acc[gw.event] = gw.transfersCost;
     return acc;
   }, {} as Record<number, number>);
+
+  const chipByEvent = chips.reduce((acc, c) => {
+    if (c.name === 'freehit') acc[c.event] = c.name;
+    return acc;
+  }, {} as Record<number, string>);
 
   // Group by gameweek
   const byEvent = transfers.reduce((acc, t) => {
@@ -95,7 +102,7 @@ export function TransferTimeline({ transfers, gameweekHistory }: TransferTimelin
           {events.map((event, idx) => {
             const gwTransfers = byEvent[event];
             const hitCost = hitCostByEvent[event] ?? 0;
-            const weekly = getWeeklyScore(gwTransfers, hitCost);
+            const weekly = getWeeklyScore(gwTransfers, hitCost, chipByEvent[event]);
             const style = tierStyles[weekly.tier];
             const isExpanded = expandedWeeks.has(event);
 

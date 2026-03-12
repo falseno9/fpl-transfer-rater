@@ -44,13 +44,18 @@ export interface GameweekHistory {
 export interface WeeklyScore {
   score: number;
   label: string;
-  tier: 'great' | 'good' | 'neutral' | 'bad' | 'terrible' | 'toosoon';
+  tier: 'great' | 'good' | 'neutral' | 'bad' | 'terrible' | 'toosoon' | 'freehit';
 }
 
 export function getWeeklyScore(
   transfers: ProcessedTransfer[],
-  hitCost: number
+  hitCost: number,
+  chipName?: string
 ): WeeklyScore {
+  // Free Hit: transfers are temporary (team reverts next GW), don't rate them
+  if (chipName === 'freehit') {
+    return { score: 0, label: 'Free Hit', tier: 'freehit' };
+  }
   const rated = transfers.filter(t => t.rating !== 'Too Soon');
   if (transfers.length > 0 && rated.length === 0) {
     return { score: 0, label: 'Too Soon', tier: 'toosoon' };
@@ -59,13 +64,13 @@ export function getWeeklyScore(
   const totalGain = rated.reduce((sum, t) => sum + t.netGain * 3, 0);
   const score = totalGain - hitCost;
   const sign = score >= 0 ? '+' : '';
-  const label = `${sign}${score.toFixed(0)}`;
+  const pts = `${sign}${score.toFixed(0)}`;
 
-  if (score >= 10) return { score, label, tier: 'great' };
-  if (score >= 5) return { score, label, tier: 'good' };
-  if (score > 2) return { score, label, tier: 'neutral' };
-  if (score >= 0) return { score, label, tier: 'bad' };
-  return { score, label, tier: 'terrible' };
+  if (score >= 15) return { score, label: `Great (${pts})`, tier: 'great' };
+  if (score >= 5) return { score, label: `Good (${pts})`, tier: 'good' };
+  if (score >= 0) return { score, label: `OK (${pts})`, tier: 'neutral' };
+  if (score >= -5) return { score, label: `Bad (${pts})`, tier: 'bad' };
+  return { score, label: `Terrible (${pts})`, tier: 'terrible' };
 }
 
 export interface ProcessedData {
