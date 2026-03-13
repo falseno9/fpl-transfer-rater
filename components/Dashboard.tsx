@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { processTransfers, ProcessedData, ProcessedTransfer, FPLChip, getWeeklyScore } from '@/lib/fpl';
 import { TransferCard } from '@/components/TransferCard';
 import { PointsChart } from '@/components/PointsChart';
@@ -44,6 +44,62 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
     e.preventDefault();
     fetchData(teamId);
   };
+
+  const horsePuns = useMemo(() => [
+    "Why check transfers when you could just bet on the horses instead?",
+    "Quit horsing around with your FPL team and head to the bookies.",
+    "Your transfer strategy has less direction than a horse in a roundabout.",
+    "Neigh-ver gonna give you points, neigh-ver gonna let you win.",
+    "Saddling up bad transfers since GW1 — a true stallion of mediocrity.",
+    "Hold your horses… actually, just sell your whole team.",
+    "Your midfield has less horsepower than a Shetland pony.",
+    "Stop flogging a dead horse and just wildcard already.",
+    "Mane attraction? More like mane disappointment this season.",
+    "Unbridled chaos — that's what your transfer history looks like.",
+    "You're putting the cart before the horse — bench boost before you fix your squad.",
+    "These transfers are so bad, even a horse wouldn't back them.",
+    "Galloping from one bad pick to another — truly a thoroughbred of pain.",
+    "Hay, at least your transfers give the rest of the league a laugh.",
+    "Jockey for position all you want, you're still finishing last.",
+    "Your captaincy picks have been a real night-mare.",
+    "Reining in points? More like reining in disappointment.",
+    "A horse walks into a bar. The bartender asks, 'Why the long FPL season?'",
+    "Stirrup some controversy with these shocking transfers.",
+    "Stable genius? Your FPL rank says otherwise.",
+  ], []);
+
+  const horsePun = useMemo(
+    () => horsePuns[Math.floor(Math.random() * horsePuns.length)],
+    [horsePuns]
+  );
+
+  const egoPuns = useMemo(() => [
+    { text: "Save yourself the analysis — just copy {link}.", hasLink: true },
+    { text: "Your transfers are cute. Want to see how a real manager does it? Check {link}.", hasLink: true },
+    { text: "I'd explain my strategy, but you wouldn't understand the vision.", hasLink: false },
+    { text: "Pro tip: whatever you're about to do, do the opposite. Or just copy {link}.", hasLink: true },
+    { text: "Step 1: Look at your team. Step 2: Look at {link}. Step 3: Accept reality.", hasLink: true },
+    { text: "They call me the Oracle of FPL. You can call me your {link}.", hasLink: true },
+    { text: "I don't always make transfers, but when I do, they're masterclass. Unlike yours.", hasLink: false },
+    { text: "Forgetting to set your team is not a strategy. Or is it? No. No it isn't.", hasLink: false },
+    { text: "Is a goalkeeper a defender? Is water wet? These are the questions you should be asking instead of making transfers.", hasLink: false },
+    { text: "Your defence has more holes than the 'is a goalkeeper a defender' debate.", hasLink: false },
+    { text: "You call that a transfer strategy? I call it a cry for help. Here, copy {link}.", hasLink: true },
+    { text: "Not setting your team and hoping for the best would've scored more than this.", hasLink: false },
+    { text: "You know what's worse than forgetting to set your team? Setting it like this.", hasLink: false },
+    { text: "My nan could pick a better XI. And she thinks a goalkeeper is a defender.", hasLink: false },
+    { text: "Bold of you to analyse these transfers. Some things are better left unexamined.", hasLink: false },
+    { text: "At this point, just auto-pick and pray. Or copy {link}.", hasLink: true },
+    { text: "The only thing stable about your season is your position at the bottom. Check {link} for inspiration.", hasLink: true },
+    { text: "Imagine having this many transfers and still being worse than someone who forgot to set their team for 3 weeks.", hasLink: false },
+    { text: "FPL tip: a goalkeeper counts as a defender if you believe hard enough. Just like your transfers count as strategy.", hasLink: false },
+    { text: "Some managers play chess. You're playing snakes and ladders. Mostly snakes.", hasLink: false },
+  ], []);
+
+  const egoPun = useMemo(
+    () => egoPuns[Math.floor(Math.random() * egoPuns.length)],
+    [egoPuns]
+  );
 
   const transfers = data?.transfers || [];
   const chips = data?.chips || [];
@@ -205,7 +261,15 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
               animate={{ opacity: 1, y: 0 }}
               className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-400 p-4 rounded-xl text-center text-sm font-medium"
             >
-              Save yourself the analysis — just copy <a href="https://fantasy.premierleague.com/entry/133463/history" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900 dark:hover:text-indigo-300">my team</a>
+              {egoPun.hasLink ? (
+                <>
+                  {egoPun.text.split('{link}')[0]}
+                  <a href="https://fantasy.premierleague.com/entry/133463/history" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-900 dark:hover:text-indigo-300">my team</a>
+                  {egoPun.text.split('{link}')[1]}
+                </>
+              ) : (
+                egoPun.text
+              )}
             </motion.div>
           )}
           {teamId === '6032721' && (
@@ -214,7 +278,7 @@ export function Dashboard({ initialTeamId, initialLeagueId }: { initialTeamId?: 
               animate={{ opacity: 1, y: 0 }}
               className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-400 p-4 rounded-xl text-center text-sm font-medium"
             >
-              Why check transfers when you could just bet on the horses instead?
+              {horsePun}
             </motion.div>
           )}
           <div>
