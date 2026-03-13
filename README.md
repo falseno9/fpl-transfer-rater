@@ -1,6 +1,6 @@
 # FPL Transfer Rater
 
-A web app that analyzes your Fantasy Premier League transfers and rates them as **Good Move**, **Point Chasing**, **Neutral**, or **Too Soon**.
+A web app that analyzes your Fantasy Premier League transfers and rates them based on player performance before and after each move.
 
 ## How It Works
 
@@ -14,21 +14,30 @@ Enter your FPL Team ID (found in the URL of your FPL points page) and the app wi
 
 | Rating | Condition |
 |---|---|
-| **Good Move** | Incoming avg ≥ 1.5× trailing avg **and** ≥ 2pts better (or outgoing player was blanking) |
-| **Point Chasing** | Outgoing avg > 2pts **and** incoming avg ≤ 0.6× trailing avg **and** ≥ 2pts worse |
-| **Neutral** | Everything else |
+| **Great Move** | Net gain ≥ 10 points |
+| **Good Move** | Net gain ≥ 4 points |
+| **Sideways** | Net gain between -3 and 3 points |
+| **Point Chasing** | Net gain ≤ -4 points |
+| **Sold Too Early** | Net gain ≤ -10 points |
 | **Too Soon** | Transfer is too recent to have 3 GWs of data yet |
 
-Ratings use both a ratio and an absolute point difference to avoid noise at low point totals.
-
 Chips (Wildcard, Free Hit, Bench Boost, Triple Captain) are shown alongside the relevant gameweek.
+
+### Features
+
+- **Gameweek tier breakdown** — each GW rated Great/Good/Okay/Poor/Bad/Terrible based on aggregate transfer performance
+- **Points chart** — visualize your transfer net gains across the season
+- **Transfer timeline** — chronological view of all transfers with ratings
+- **League view** — compare transfer ratings across a mini-league
+- **Dark mode** — system-aware theme switching
 
 ## Tech Stack
 
 - [Next.js](https://nextjs.org/) (App Router)
 - TypeScript
 - Tailwind CSS
-- Framer Motion
+- Motion (Framer Motion)
+- [Vercel Analytics](https://vercel.com/analytics)
 
 ## Run Locally
 
@@ -47,4 +56,4 @@ The app proxies FPL API requests through `/api/fpl` to work around CORS restrict
 
 ## Deploy
 
-Hosted on [Google Cloud Run](https://cloud.google.com/run). Push to `main` to trigger a new deployment via continuous deployment.
+Hosted on [Vercel](https://vercel.com). Push to `main` to trigger a new deployment via continuous deployment.
